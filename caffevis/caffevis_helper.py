@@ -1,13 +1,19 @@
 import numpy as np
+import cv2
 
 from image_misc import get_tiles_height_width, caffe_load_image
 
 
 
 def net_preproc_forward(net, img, data_hw):
-    appropriate_shape = data_hw + (3,)
-    assert img.shape == appropriate_shape, 'img is wrong size (got %s but expected %s)' % (img.shape, appropriate_shape)
     #resized = caffe.io.resize_image(img, net.image_dims)   # e.g. (227, 227, 3)
+    if net.blobs[net.inputs[0]].data.shape[1] == 1:
+	appropriate_shape = data_hw + (1,)
+	bw_img = 0.299*img[:,:,0] + 0.587*img[:,:,1] + 0.114*img[:,:,2]
+	img = bw_img.reshape(data_hw[0],data_hw[1],1)
+    elif net.blobs[net.inputs[0]].data.shape[1] == 3:
+	appropriate_shape = data_hw + (3,)
+	assert img.shape == appropriate_shape, 'img is wrong size (got %s but expected %s)' % (img.shape, appropriate_shape)
     data_blob = net.transformer.preprocess('data', img)                # e.g. (3, 227, 227), mean subtracted and scaled to [0,255]
     data_blob = data_blob[np.newaxis,:,:,:]                   # e.g. (1, 3, 227, 227)
     output = net.forward(data=data_blob)

@@ -49,7 +49,8 @@ class CaffeVisApp(BaseApp):
             settings.caffevis_deploy_prototxt,
             settings.caffevis_network_weights,
             mean = None,                                 # Set to None for now, assign later         # self._data_mean,
-            channel_swap = self._net_channel_swap,
+            channel_swap = None, #Set to None to extend support to single channel
+		#self._net_channel_swap,
             raw_scale = self._range_scale,
         )
 
@@ -85,6 +86,8 @@ class CaffeVisApp(BaseApp):
             #    self._data_mean = tuple(self._data_mean)
         if self._data_mean is not None:
             self.net.transformer.set_mean(self.net.inputs[0], self._data_mean)
+	if self.net.blobs[self.net.inputs[0]].data.shape[1] == 3: #RGB
+	    self.net.transformer.set_channel_swap(self.net.inputs[0], self._net_channel_swap)
         
         check_force_backward_true(settings.caffevis_deploy_prototxt)
 
